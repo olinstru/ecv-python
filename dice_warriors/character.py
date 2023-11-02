@@ -1,18 +1,8 @@
 from __future__ import annotations
 from dice import Dice, RiggedDice
-
 from rich import print
 from rich.layout import Layout
 from rich.panel import Panel
-from rich import print
-from rich.panel import Panel
-
-""" layout["lower"].split_row(
-    Layout(name="left"),
-    Layout(name="right"),
-) """
-""" print(layout) """
-
 
 print("\n")
 
@@ -31,7 +21,7 @@ class Character:
         self._dice = dice
 
     def welcomeCharacter(self):
-        return f"[purple]{type(self)._label} {self._name}[/purple] is starting the fight with [blue]{self._health}/{self._max_health}hp[/blue] ([red]{self._attack_value}atk[/red] / [green]{self._defense_value}def[/green])"
+        return f"[purple]{type(self)._label} {self._name}[/purple] is starting the fight with [blue]{self._health}/{self._max_health}hp[/blue] ([red]{self._attack_value}atk[/red] / [yellow]{self._defense_value}def[/yellow])"
 
     def __str__(self):
         return self.welcomeCharacter()
@@ -67,14 +57,20 @@ class Character:
     def compute_damages(self, target: Character, roll: int) -> int:
         return self._attack_value + roll
 
-    def attack(self, target: Character):
+    def attack_message(self, target: Character):
         if self.is_alive():
             roll = self._dice.roll()
             damages = self.compute_damages(target, roll)
-            print(
-                f"⚔️ {type(self)._label}  {self._name} [red]attack[/red] {target.get_name()} with {damages} damages ! (attack: {self._attack_value} + roll: {roll})"
+            message = (
+                f"⚔️ {type(self)._label} {self._name} [red]attack[/red] {target.get_name()} "
+                f"with {damages} damages ! (attack: {self._attack_value} + roll: {roll})"
             )
             target.defense(self, damages)
+            return message
+
+    def attack(self, target: Character):
+        if self.is_alive():
+            return self.attack_message(target)
 
     def compute_defense(self, damages, roll):
         return damages - self._defense_value - roll
@@ -116,27 +112,33 @@ if __name__ == "__main__":
     char_1: Warrior = Warrior("James", 20, 8, 3, Dice(6))
     char_2: Thief = Thief("Dina", 20, 8, 3, Dice(6))
 
-    print(char_1)
-    print(char_2)
-    
     layout = Layout()
-
     layout.split_column(
-        Layout(Panel("The combat starts!", title="Welcome")),
-        Layout(name="lower"),
-        Layout(name="footer"),
-)
+        Layout(
+            Panel("The combat starts!", title="Welcome", style="bold cyan on black")
+        ),
+        Layout(name="middle"),
+        Layout(Panel("Combat Log", title="Combat", style="bold yellow on black")),
+    )
 
-    layout["lower"].split_row(
-        Layout(Panel(char_1.welcomeCharacter(), title="Character 1")),
-        Layout(Panel(char_2.welcomeCharacter(), title="Character 2")),
-)
-    
-    
+    layout["middle"].split_row(
+        Layout(
+            Panel(
+                char_1.welcomeCharacter(),
+                title="Character 1",
+                style="bold green on black",
+            )
+        ),
+        Layout(
+            Panel(
+                char_2.welcomeCharacter(),
+                title="Character 2",
+                style="bold green on black",
+            )
+        ),
+    )
 
     print(layout)
-    
-    
 
     while char_1.is_alive() and char_2.is_alive():
         char_1.attack(char_2)
